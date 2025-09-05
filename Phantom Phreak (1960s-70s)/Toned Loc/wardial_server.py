@@ -6,7 +6,15 @@
 
 
 import argparse, random, signal, socket, threading, time
-from datetime import datetime
+import soundkit
+from phonefmt import port_to_number
+
+
+# Fake Number Variables
+FAKE_NPA = 212
+FAKE_NXX = 555
+START_SUFFIX = 1200
+BASE_PORT = 7000   # make sure this matches your --base-port
 
 
 STOP = threading.Event()
@@ -19,7 +27,7 @@ STOP = threading.Event()
 # RINGOUT:  prints RING n times, the hangup
 # N0_CARRIER: brief CONNECT msg then NO CARRIER then hangup
 # CARRIER_DETECT: prints CARRIER <speed> then NO CARRIER then hangup
-# TONE: CONNECT ,speed>, show banner, and keep open to echo simple OKs
+# MODEM: CONNECT ,speed>, show banner, and keep open to echo simple OKs
 
 
 LINES = {
@@ -27,7 +35,7 @@ LINES = {
     7001: {"role": "BUSY"},
     7002: {"role": "FAX", "rings": 2},
     7003: {"role": "RINGOUT", "rings": 6, "ring_ms": 900},
-    7004: {"role": "TONE", "rings": 1, "carrier": "2400"}, # <-- the hit
+    7004: {"role": "MODEM", "rings": 1, "carrier": "2400"}, # <-- the hit
     7005: {"role": "VOICE", "rings": 2},
     7006: {"role": "NO_CARRIER", "rings": 1},
     7007: {"role": "CARRIER_DETECT", "rings": 1, "carrier": "9600"},
@@ -79,33 +87,48 @@ def ring_sequence(conn, rings, ring_ms):
 def handle(conn, addr, cfg):
     role = cfg.get("role", "VOICE").upper()
     if role == "BUSY":
+        soundkit.play_busy(cycles=2)
         time.sleep(0.2); conn.close(); return
 
-    if role in ("VOICE", "FAX", "TONE", "RINGOUT", "NO_CARRIER", "CARRIER_DETECT"):
-        ring_sequence(conn, cfg.get("rings", 2), cfg.get("ring_ms", 900))
+    if role in ("VOICE", "FAX", "MODEM", "RINGOUT", "NO_CARRIER", "CARRIER_DETECT"):
+        rings = cfg.get("rings", 2)
+        ring_ms = cfg.get("ring_ms", 900)
+        # play a ringback while we print RINGs
+        soundkit.play_ring(ms_on=2000, ms_off=4000, cycles=max(1, rings//2))
+        ring_sequence(conn, rings, ring_ms)
+        conn.close(); return
+
 
     if role == "VOICE":
+        soundkit.play_voice()
         safe_send(conn, "Hello? ... Hello? ... This is not a fax. *click*\r\n")
         conn.close(); return
 
     if role == "FAX":
+        soundkit.play_fax()
         safe_send(conn, b"\x10\x13\xff\xaaFAX??\r\n")
         conn.close(); return
 
     if role == "RINGOUT":
+        soundkit.play_reorder(cycles=3)  # fast busyish to mark timeout end
         conn.close(); return
 
     if role == "NO_CARRIER":
+        soundkit.play_connect("1200")
         safe_send(conn, "CONNECT 1200\r\n"); time.sleep(0.7)
+        soundkit.play_no_carrier()
         safe_send(conn, "NO CARRIER\r\n"); conn.close(); return
 
     if role == "CARRIER_DETECT":
         speed = cfg.get("carrier", "9600")
+        soundkit.play_connect(speed)
         safe_send(conn, f"CARRIER {speed}\r\n"); time.sleep(0.7)
+        soundkit.play_no_carrier()
         safe_send(conn, "NO CARRIER\r\n"); conn.close(); return
 
-    if role == "TONE":
+    if role == "MODEM":
         speed = cfg.get("carrier", "2400")
+        soundkit.play_connect(speed)
         safe_send(conn, BANNER.format(speed=speed))
         conn.settimeout(20)
         try:
@@ -143,7 +166,9 @@ def serve(host, port, cfg):
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     srv.bind((host, port))
     srv.listen(1)
-    print(f"[{host}:{port}] {cfg}")
+    fake_num = port_to_number(port, base_port=BASE_PORT,
+                              npa=FAKE_NPA, nxx=FAKE_NXX, start_suffix=START_SUFFIX)
+    print(f"[{host}:{port} ~ {fake_num}] {cfg}")
     while not STOP.is_set():
         try:
             srv.settimeout(0.5)
