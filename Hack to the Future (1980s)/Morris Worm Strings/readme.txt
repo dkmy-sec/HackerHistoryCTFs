@@ -1,0 +1,1 @@
+This “ELF” has junk, but the second line is an XOR blob with key 0x23. Decode it to ASCII.
