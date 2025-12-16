@@ -1,0 +1,8 @@
+version: '3.9'
+name: gibson-ctf
+
+networks:
+  dmz_net:
+  internal_net:
+
+services:

@@ -1,0 +1,23 @@
+[
+  {
+    "index": 0,
+    "data": "Genesis: Bit boots up in Bithaven. Maybe the work of Drunkenmunky Nakamoto?",
+    "nonce": 1337,
+    "prev_hash": "0",
+    "hash": "b4a5b8f0a1d31c53c8d9e7d14cf0a2d6b1de9a4d85a9d62efec45e0a9f49e6d2"
+  },
+  {
+    "index": 1,
+    "data": "Bit buys ShiGi and NeutralGround a White Claw at the Bithaven Market(fridge).",
+    "nonce": 4242,
+    "prev_hash": "b4a5b8f0a1d31c53c8d9e7d14cf0a2d6b1de9a4d85a9d62efec45e0a9f49e6d2",
+    "hash": "b4a5b8f0a1d31c53c8d9e7d14cf0a2d6b1de9a4d85a9d62efec45e0a9f49e6d2"
+  },
+  {
+    "index": 2,
+    "data": "TRANSFER: 100 BITH -> QklUSEFWRU57Yml0X2Jyb2tlX3RoZV9jaGFpbn0=",
+    "nonce": 9999,
+    "prev_hash": "b4a5b8f0a1d31c53c8d9e7d14cf0a2d6b1de9a4d85a9d62efec45e0a9f49e6d2",
+    "hash": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "from": "bit",
+  "to": "bithaven_fridge",
+  "amount": 1,
+  "memo": "Bit says: nothing to see here. Move along.",
+  "signature": "REPLACE_WITH_REAL_SIGNATURE"
+}
