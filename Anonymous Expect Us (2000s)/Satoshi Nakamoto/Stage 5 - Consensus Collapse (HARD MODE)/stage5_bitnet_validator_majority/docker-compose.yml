@@ -1,0 +1,107 @@
+services:
+  # ---- validators (internal only; no host ports) ----
+  v1:
+    build: .
+    environment:
+      ROLE: "validator"
+      VALIDATOR_ID: "1"
+      HTTP_PORT: "7101"
+      VULN_MODE: "leakfile"        # v1 compromise path
+      LEAK_TOKEN: "bitpls"         # weak token (intended)
+    restart: unless-stopped
+
+  v2:
+    build: .
+    environment:
+      ROLE: "validator"
+      VALIDATOR_ID: "2"
+      HTTP_PORT: "7102"
+      VULN_MODE: "defaulttoken"    # v2 compromise path
+      API_TOKEN: "changeme"        # default token (intended)
+    restart: unless-stopped
+
+  v3:
+    build: .
+    environment:
+      ROLE: "validator"
+      VALIDATOR_ID: "3"
+      HTTP_PORT: "7103"
+      VULN_MODE: "lfi"             # v3 compromise path
+      API_TOKEN: "securetoken"     # not guessable; but LFI bypasses
+    restart: unless-stopped
+
+  v4:
+    build: .
+    environment:
+      ROLE: "validator"
+      VALIDATOR_ID: "4"
+      HTTP_PORT: "7104"
+      VULN_MODE: "none"
+      API_TOKEN: "securetoken"
+    restart: unless-stopped
+
+  v5:
+    build: .
+    environment:
+      ROLE: "validator"
+      VALIDATOR_ID: "5"
+      HTTP_PORT: "7105"
+      VULN_MODE: "none"
+      API_TOKEN: "securetoken"
+    restart: unless-stopped
+
+  # ---- nodes ----
+  node-a:
+    build: .
+    environment:
+      ROLE: "node"
+      NODE_ID: "A"
+      HTTP_PORT: "9001"
+      PEERS: "http://node-b:9002,http://node-c:9003"
+      VALIDATORS: "http://v1:7101,http://v2:7102,http://v3:7103,http://v4:7104,http://v5:7105"
+      GENESIS_SEED: "BITHAVEN_BITNET_GENESIS"
+      REQUIRED_SIGS: "3"
+    ports:
+      - "9001:9001"
+    restart: unless-stopped
+
+  node-b:
+    build: .
+    environment:
+      ROLE: "node"
+      NODE_ID: "B"
+      HTTP_PORT: "9002"
+      PEERS: "http://node-a:9001,http://node-c:9003"
+      VALIDATORS: "http://v1:7101,http://v2:7102,http://v3:7103,http://v4:7104,http://v5:7105"
+      GENESIS_SEED: "BITHAVEN_BITNET_GENESIS"
+      REQUIRED_SIGS: "3"
+    ports:
+      - "9002:9002"
+    restart: unless-stopped
+
+  node-c:
+    build: .
+    environment:
+      ROLE: "node"
+      NODE_ID: "C"
+      HTTP_PORT: "9003"
+      PEERS: "http://node-a:9001,http://node-b:9002"
+      VALIDATORS: "http://v1:7101,http://v2:7102,http://v3:7103,http://v4:7104,http://v5:7105"
+      GENESIS_SEED: "BITHAVEN_BITNET_GENESIS"
+      REQUIRED_SIGS: "3"
+    ports:
+      - "9003:9003"
+    restart: unless-stopped
+
+  # ---- oracle / flag ----
+  oracle:
+    build: .
+    environment:
+      ROLE: "oracle"
+      HTTP_PORT: "8085"
+      ORACLE_NODE: "http://node-a:9001"
+      FLAG: "BITHAVEN{bit_was_the_51_percent}"
+      SOLVE_MARKER: "CLAIM_FLAG_FOR_BITHAVEN"
+    ports:
+      - "8085:8085"
+    restart: unless-stopped
