@@ -4,9 +4,9 @@ pragma solidity ^0.8.24;
 import "./BitVault.sol"
 
 /**
- * Setup - deploys the vulnerable vault and seeds it with ETH
- * Flag is NOT stored on-chaine (keep it server-side)
- * Server checks whether vault drained
+ * Setup - deploys and seeds the vault.
+ * Hard Mode: Server does NOT hand out the vault address directly.
+ * Players must call vault() on Setup via raw calldata.
  */
 
 contract Setup {
@@ -15,7 +15,7 @@ contract Setup {
     constructor () payable {
         vault = new BitVault();
         // seed the vault with the setup funds
-        (bool ok,) = address(vault).call{value" msg.value}("");
+        (bool ok,) = address(vault).call{value: msg.value}("");
             require(ok, "seed failed");
     }
 

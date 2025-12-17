@@ -1,0 +1,46 @@
+services:
+  bitnet-node-a:
+    build: .
+    environment:
+      NODE_ID: "A"
+      HTTP_PORT: "9001"
+      PEERS: "http://bitnet-node-b:9002,http://bitnet-node-c:9003"
+      GENESIS_SEED: "BITHAVEN_BITNET_GENESIS"
+    ports:
+      - "9001:9001"
+    restart: unless-stopped
+
+  bitnet-node-b:
+    build: .
+    environment:
+      NODE_ID: "B"
+      HTTP_PORT: "9002"
+      PEERS: "http://bitnet-node-a:9001,http://bitnet-node-c:9003"
+      GENESIS_SEED: "BITHAVEN_BITNET_GENESIS"
+    ports:
+      - "9002:9002"
+    restart: unless-stopped
+
+  bitnet-node-c:
+    build: .
+    environment:
+      NODE_ID: "C"
+      HTTP_PORT: "9003"
+      PEERS: "http://bitnet-node-a:9001,http://bitnet-node-b:9002"
+      GENESIS_SEED: "BITHAVEN_BITNET_GENESIS"
+    ports:
+      - "9003:9003"
+    restart: unless-stopped
+
+  stage5-flag:
+    build: .
+    environment:
+      HTTP_PORT: "8085"
+      # pick which node is the "oracle" that decides canonical chain
+      ORACLE_NODE: "http://bitnet-node-a:9001"
+      FLAG: "BITHAVEN{bit_was_the_51_percent}"
+      SOLVE_MARKER: "CLAIM_FLAG_FOR_BITHAVEN"
+    ports:
+      - "8085:8085"
+    command: ["python3", "/app/flag_server.py"]
+    restart: unless-stopped

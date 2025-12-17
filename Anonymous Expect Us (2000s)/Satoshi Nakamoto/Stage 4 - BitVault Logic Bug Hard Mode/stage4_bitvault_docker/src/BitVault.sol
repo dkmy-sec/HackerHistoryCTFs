@@ -9,7 +9,7 @@ pragma solidity ^0.8.24;
  */
 
 contract BitVault {
-    mapping(address => uint256) public balances;
+    mapping(address => uint256) private balances;
 
     event Deposit(address indexed who, uint256 amount);
     event Withdraw(address indexed who, uint256 amount);
@@ -24,13 +24,16 @@ contract BitVault {
             require(amount > 0, "zero");
             balances[msg.sender] >= amount, "insufficient");
 
-            // 🔥 VULNERABILITY: external call before state update
+            // HARD MODE: force a contract-based exploit
+            require(msg.sender != tx.origin, "EOA blocked");
+
+            // 🔥VULN: external call before effects
             (bool ok,) = msg.sender.call{value:amount}("");
             require(ok, "send failed");
-            balances[msg.sender] -= amount;
-            emit Withdraw(msg.sender, amount);
-        }
 
+            balances[msg.sender] -= amount;
+        }
+        // keep a tiny view helper (not critical)
         function vaultBalance() external view returns (uint256) {
             return address(this).balance;
         }

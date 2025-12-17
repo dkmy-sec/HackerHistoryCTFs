@@ -7,6 +7,7 @@ export RPC_URL="http://127.0.0.1:8545"
 # Fixed private key for deployer (anvil account[0])
 # NOTE: This is fine for CTF. Players should use their own wallets/accounts.
 export DEPLOYER_KEY="0x59c6995e998f97a5a0044966f094538e7eecf2b2a2a4b6d2e7d6b5a7b6d2c0b7"
+export DEPLOYER_PRIV="$DEPLOYER_KEY"
 
 VAULT_ETH="${VAULT_ETH:-10}"
 export VAULT_WEI=$(python3 - <<PY

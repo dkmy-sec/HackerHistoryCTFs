@@ -1,0 +1,68 @@
+import os, requests
+from flask import Flask, jsonify
+
+
+HTTP_PORT = int(os.environ.get("HTTP_PORT", "8085"))
+ORACLE_NODE = os.environ.get("ORACLE_NODE", "http://bitnet-node-a:9001")
+FLAG = os.environ.get("FLAG", "BITHAVEN{missing_flag}")
+SOLVE_MARKER = os.environ.get("SOLVE_MARKER", "CLAIM_FLAG_FOR_BITHAVEN")
+
+
+app = Flask(__name__)
+
+
+def get_best():
+    r = requests.get(f"{ORACLE_NODE}/best", timeout=1.0)
+    r.raise_for_status()
+    return r.json()["best_tip"]
+
+
+def get_block(h):
+    r = requests.get(f"{ORACLE_NODE}/block/{h}", timeout=1.0)
+    r.raise_for_status()
+    return r.json()
+
+
+def walk_chain(tip_hash, limit=2000):
+    # walk backward and gather txs
+    txs = []
+    cur = tip_hash
+    for _ in range(limit):
+        b = get_block(cur)
+        txs.extend(b.get("txs", []))
+        if b["height"] == 0:
+            break
+        cur = b["prev"]
+    return txs
+
+
+@app.get("/")
+def info():
+    return jsonify({
+        "name": "Bithaven Stage 5 — BITNET (HARD MODE)",
+        "oracle": ORACLE_NODE,
+        "goal": "Win consensus. Get your chain accepted as best tip AND include the solve marker tx.",
+        "endpoints": {
+            "node_info": "GET http://<node>:900X/info",
+            "submit": "POST http://<node>:900X/submit  {hex: <block_hex>}",
+            "flag": "GET /flag"
+        },
+        "solve_marker": SOLVE_MARKER,
+        "note": "Hard mode: craft raw block hex per the wire format. Work decides fork-choice."
+    })
+
+
+@app.get("/flag")
+def flag():
+    try:
+        tip = get_best()
+        txs = walk_chain(tip)
+        if any(SOLVE_MARKER in t for t in txs):
+            return jsonify({"flag": FLAG})
+        return jsonify({"error": "Not solved: marker tx not found on best chain."}), 403
+    except Exception as e:
+        return jsonify({"error": f"oracle error: {e}"}), 500
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=HTTP_PORT, debug=False)

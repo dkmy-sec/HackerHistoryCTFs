@@ -1,0 +1,11 @@
+services:
+  staged-bitvault:
+    build: .
+    ports:
+      - "8545:8545" # EVM JSON-RPC
+      - "8080:8080" # challenge info + flag endpoint
+    environment:
+      FLAG: "bithaven{1_n0t_4_b3_4_v4ltu3}"
+      # optional: true vault starting funds
+      VAULT_ETH: "10"
+    restart: unless-stopped
