@@ -36,4 +36,27 @@ def walk_chain(tip_hash, limit=5000):
 
 
 @app.get("/")
-def info
+def info():
+    return jsonify({
+        "name": "Bithaven Stage 5 - BITNET (51% Validator Majority) HARD NODE",
+        "oracle": ORACLE_NODE,
+        "goal": "Get a majority-signed canonical chain that includes the solve marker tx.",
+        "solve_marker": SOLVE_MARKER,
+        "flag": "GET /flag (after solved)"
+    })
+
+
+@app.get("/flag")
+def flag():
+    try:
+        tip = get_best()
+        txs = walk_chain(tip)
+        if any(SOLVE_MARKER in t for t in txs):
+            return jsonify({"flag": FLAG})
+        return jsonify({"error": "Not solved: marker tx not found on best chain."}), 403
+    except Exception as e:
+        return jsonify({"error": f"oracle error: {e}"}), 500
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=HTTP_PORT, debug=False)
