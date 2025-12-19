@@ -1,0 +1,84 @@
+services:
+  honest1:
+    build: .
+    environment:
+      ROLE: "honest"
+      NODE_ID: "honest-1"
+      HTTP_PORT: "8001"
+    command: ["python3", "/app/honest_node.py"]
+    restart: unless-stopped
+
+  honest2:
+    build: .
+    environment:
+      ROLE: "honest"
+      NODE_ID: "honest-2"
+      HTTP_PORT: "8002"
+    command: ["python3", "/app/honest_node.py"]
+    restart: unless-stopped
+
+  honest3:
+    build: .
+    environment:
+      ROLE: "honest"
+      NODE_ID: "honest-3"
+      HTTP_PORT: "8003"
+    command: ["python3", "/app/honest_node.py"]
+    restart: unless-stopped
+
+  honest4:
+    build: .
+    environment:
+      ROLE: "honest"
+      NODE_ID: "honest-4"
+      HTTP_PORT: "8004"
+    command: ["python3", "/app/honest_node.py"]
+    restart: unless-stopped
+
+  honest5:
+    build: .
+    environment:
+      ROLE: "honest"
+      NODE_ID: "honest-5"
+      HTTP_PORT: "8005"
+    command: ["python3", "/app/honest_node.py"]
+    restart: unless-stopped
+
+  sybil:
+    build: .
+    environment:
+      HTTP_PORT: "9100"
+      # Optional: cap number of sybils to keep memory sane, set high for events
+      MAX_SYBILS: "5000"
+    command: ["python3", "/app/sybil_factory.py"]
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+
+  coordinator:
+    build: .
+    environment:
+      HTTP_PORT: "9000"
+      # Honest peers are fixed services:
+      HONEST_PEERS:
+        "http://honest1:8001/,http://honest2:8002/,http://honest3:8003/,http://honest4:8004/,http://honest5:8005/"
+      SYBIL_FACTORY: "http://sybil:9100/"
+      REQUIRED_LEADERS: "3"
+      QUORUM: "2" # 2-of-3 for proposal acceptance
+      ACTION: "ENABLE_GHOST_MODE"
+    command: ["python3", "/app/coordinator.py"]
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+
+  oracle:
+    build: .
+    environment:
+      HTTP_PORT: "8086"
+      COORDINATOR: "http://coordinator:9000/"
+      FLAG: "bithaven{6h05t_1n_th3_m3sh}"
+      ACTION: "ENABLE_GHOST_MODE"
+    command: ["python3", "/app/oracle.py"]
+    ports:
+      - "8086:8086"
+    restart: unless-stopped
