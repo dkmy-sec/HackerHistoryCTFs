@@ -9,4 +9,17 @@
                                          -  +++The Mentor+++
 """
 
-import
+import os, time, secrets
+from flask import Flask, request, jsonify
+
+
+HTTP_PORT = int(os.environ.get("HTTP_PORT", "9100"))
+MAX_SYBILS = int(os.environ.get("MAX_SYBILS", "5000"))
+START = time.time()
+
+
+app = Flask(__name__)
+
+
+# Each sybil identity behaves like a noe with /status /vote /proposal
+sybils = {}
