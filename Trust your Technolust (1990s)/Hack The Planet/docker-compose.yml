@@ -1,0 +1,48 @@
+version: "3.9"
+services:
+  ctfd:
+    image: ctfd/ctfd:latest
+    environment:
+      - DATABASE_URL=sqlite:///ctfd.db
+    ports:
+      - "8000:8000"
+    networks: [dmz_net]
+
+  neon-portal:
+    build: ./services/neon-portal
+    environment:
+      - API_HMAC_KEY=changeme
+    ports:
+      - "8080:8080"
+    networks: [dmz_net, internal_net]
+    depends_on: [files-core]
+
+  dmz-web:
+    image: nginx:alpine
+    ports:
+      - "8081:80"
+    networks: [dmz_net]
+
+  files-core:
+    image: dperson/samba
+    networks: [internal_net]
+    volumes:
+      - ./data/files-core:/share
+
+  gibson:
+    build: ./services/gibson
+    networks: [internal_net]
+    # Use exec to run loader on-demand:
+    # docker compose exec gibson python /app/loader.py /mnt/data/.../pack_0420.png
+
+  logcore:
+    image: opensearchproject/opensearch:latest
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+    networks: [internal_net]
+
+networks:
+  dmz_net:
+  internal_net:

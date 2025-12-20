@@ -1,8 +1,10 @@
 # arpanet_login.py
 import socket, threading, base64
+import os
+
 
 BANNER = ("SRI-ARC IMP 1969\nLOGIN: ")
-
+PORT = int(os.getenv("PORT", 1969))
 # === Obfuscated flag bits (built by a tiny builder; see below) ===
 # plaintext -> XOR with 0x37 -> base85
 _KEY = 0x37
@@ -39,8 +41,8 @@ def handler(conn):
 if __name__ == "__main__":
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind(("0.0.0.0", 1969)); s.listen(25)
-    print("[+] ARPANET sim on 1969/tcp")
+    s.bind(("0.0.0.0", PORT)); s.listen(25)
+    print(f"[+] ARPANET sim on {PORT}/tcp")
     while True:
         c, _ = s.accept()
         threading.Thread(target=handler, args=(c,), daemon=True).start()

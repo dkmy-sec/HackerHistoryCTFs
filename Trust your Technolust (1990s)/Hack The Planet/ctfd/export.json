@@ -1,0 +1,14 @@
+{
+  "challenges": [
+    {
+      "name": "Stage 1 \u2014 DMZ web",
+      "value": "WWF{IN_THE_PIPE_5X5}",
+      "category": "Web"
+    },
+    {
+      "name": "Final \u2014 The Gibson",
+      "value": "WWF{HACK_THE_PLANET}",
+      "category": "Misc"
+    }
+  ]
+}

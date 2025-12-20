@@ -1,0 +1,5 @@
+services:
+  arpanet:
+    build: .
+    ports:
+      - "1969:1969"
